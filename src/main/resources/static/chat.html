@@ -66,6 +66,11 @@
 <script type="text/javascript">
     var ws;
 
+    function newMsg(type, name, text) {
+        let obj = {type, name, text}
+        return JSON.stringify(obj);
+    }
+
     function wsOpen() {
         //websocket을 지정한 URL로 연결
         ws = new WebSocket("ws://" + location.host + "/chating");
@@ -75,19 +80,28 @@
     function wsEvt() {
         //소켓이 열리면 동작
         ws.onopen = function (e) {
-
+            console.log('웹소켓 연결')
+            var msg = {
+                type: "open",
+                userName: $("#userName").val()
+            }
+            //todo
+            ws.send(newMsg("open", ))
         }
 
         //서버로부터 데이터 수신 (메세지를 전달 받음)
         ws.onmessage = function (e) {
             //e 파라미터는 websocket이 보내준 데이터
-            var msg = e.data; // 전달 받은 데이터
-            if (msg != null && msg.trim() != '') {
-                var d = JSON.parse(msg);
+            var msgJson = e.data; // 전달 받은 데이터
+            console.log('msg', msgJson);
+
+
+            if (msgJson != null && msgJson.trim() != '') {
+                var msg = JSON.parse(msgJson);
 
                 //socket 연결시 sessionId 셋팅
-                if (d.type == "getId") {
-                    var si = d.sessionId != null ? d.sessionId : "";
+                if (msg.type == "getId") {
+                    var si = msg.sessionId != null ? msg.sessionId : "";
                     if (si != '') {
                         $("#sessionId").val(si);
 
@@ -101,30 +115,39 @@
                     }
                 }
                 //채팅 메시지를 전달받은 경우
-                else if (d.type == "message") {
-                    if (d.sessionId == $("#sessionId").val()) {
-                        $("#chating").append("<p class='me'>" + d.msg + "</p>");
+                else if (msg.type == "message") {
+                    if (msg.sessionId == $("#sessionId").val()) {
+                        $("#chating").append("<p class='me'>" + msg.msg + "</p>");
                     } else {
-                        $("#chating").append("<p class='others'>" + d.userName + " : " + d.msg + "</p>");
+                        $("#chating").append("<p class='others'>" + msg.userName + " : " + msg.msg + "</p>");
                     }
 
                 }
                 //새로운 유저가 입장하였을 경우
-                else if (d.type == "open") {
-                    if (d.sessionId == $("#sessionId").val()) {
+                else if (msg.type == "open") {
+                    if (msg.sessionId == $("#sessionId").val()) {
                         $("#chating").append("<p class='start'>[채팅에 참가하였습니다.]</p>");
                     } else {
-                        $("#chating").append("<p class='start'>[" + d.userName + "]님이 입장하였습니다." + "</p>");
+                        $("#chating").append("<p class='start'>[" + msg.userName + "]님이 입장하였습니다." + "</p>");
                     }
                 }
                 //유저가 퇴장하였을 경우
-                else if (d.type == "close") {
-                    $("#chating").append("<p class='exit'>[" + d.userName + "]님이 퇴장하였습니다." + "</p>");
+                else if (msg.type == "close") {
+                    $("#chating").append("<p class='exit'>[" + msg.userName + "]님이 퇴장하였습니다." + "</p>");
 
                 }
                 else {
                     console.warn("unknown type!")
                 }
+            }
+
+            ws.onclose = function () {
+                console.log('웹소켓 연결')
+                var msg = {
+                    type: "open",
+                    userName: $("#userName").val()
+                }
+                ws.send(msg)
             }
         }
 
