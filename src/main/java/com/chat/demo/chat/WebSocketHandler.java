@@ -19,13 +19,16 @@ public class WebSocketHandler extends TextWebSocketHandler {
     private static final Logger log = LoggerFactory.getLogger(WebSocketHandler.class);
 
     Map<String, WebSocketSession> sessionMap = new HashMap<>(); // 웹소켓 세션을 담아둘 맵
-    Map<String, String> userMap = new HashMap<>(); // 사용자
 
     /* 클라이언트가 소켓 연결시 동작 */
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         log.info("\n소켓연결. 세션: {}", session.getId());
         sessionMap.put(session.getId(), session);
+        for (String key : sessionMap.keySet()) {
+            WebSocketSession wss = sessionMap.get(key);
+            
+        }
     }
 
     /* 클라이언트로부터 메시지 수신시 동작 */
@@ -43,23 +46,11 @@ public class WebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         log.info("\n소켓연결 종료. 세션: {}", session.getId());
-        // super.afterConnectionClosed(session, status);
         sessionMap.remove(session.getId());
-
-        String userName = userMap.get(session.getId());
         for (String key : sessionMap.keySet()) {
             WebSocketSession wss = sessionMap.get(key);
 
-            if (wss == session)
-                continue;
-
-            JSONObject obj = new JSONObject();
-            obj.put("type", "close");
-            obj.put("userName", userName);
-
-            wss.sendMessage(new TextMessage(obj.toJSONString()));
         }
-        userMap.remove(session.getId());
     }
 
     /**

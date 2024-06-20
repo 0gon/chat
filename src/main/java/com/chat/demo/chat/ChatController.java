@@ -6,6 +6,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
 
+
 @Controller
 public class ChatController {
     
@@ -14,6 +15,10 @@ public class ChatController {
         return "chat.html";
     }
 
-
+    @GetMapping("/login")
+    public String getMethodName2() {
+        return "login.html";
+    }
+    
     
 }
